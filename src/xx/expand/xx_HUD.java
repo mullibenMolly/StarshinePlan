@@ -5,6 +5,7 @@ import arc.graphics.Color;
 import arc.scene.ui.layout.Table;
 import mindustry.gen.Unit;
 import mindustry.ui.Styles;
+import xx.graphics.xx_Pal;
 
 import static mindustry.Vars.player;
 

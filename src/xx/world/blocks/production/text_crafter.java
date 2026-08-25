@@ -34,13 +34,14 @@ import static mindustry.Vars.tilesize;
 public class text_crafter extends GenericCrafter {
 
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
-    public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
+    //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
+    public float maxUsage;//最大功率，代替最大电流的功能
 
     public text_crafter(String name) {
         super(name);
         connectedPower = false;
         this.maxVoltage = 0;
-        this.maxCurrent = 0;
+        this.maxUsage = 0;
     }
 
     @Override
@@ -49,7 +50,8 @@ public class text_crafter extends GenericCrafter {
         //TODO 后面需要适配不耗电的工厂
         //目前没有最大输入功率一说，没有过载。
         if(hasPower) {
-            stats.add(xx_Stat.maxVoltage, maxVoltage, xx_StatUnit.voltage);
+            stats.add(xx_Stat.maxPowerUse, maxUsage, xx_StatUnit.powerSecond2);//最大输入功率
+            stats.add(xx_Stat.maxVoltage, maxVoltage, xx_StatUnit.voltage);//最大承受电压
         }
     }
 
@@ -63,14 +65,15 @@ public class text_crafter extends GenericCrafter {
         return consume(new xx_ConsumePower(powerPerTick, 0.0f, false));
     }
 
-    //完全自由
-    public ConsumePower consumePower(float powerPerTick , int ratedVoltage , float ratedCurrent , float minCurrent , float resistance){
-        return consume(new xx_ConsumePower(powerPerTick, ratedVoltage, ratedCurrent, minCurrent, resistance));
-    }
 
     //这个用于标准与最小一致，即只能满效运行
-    public ConsumePower consumePower(float powerPerTick, int ratedVoltage, float resistance){
-        return consume(new xx_ConsumePower(powerPerTick, ratedVoltage, resistance));
+    public ConsumePower consumePower(float powerUsage, int ratedVoltage){
+        return consume(new xx_ConsumePower(powerUsage, ratedVoltage));
+    }
+
+    //可以设置最小功率
+    public ConsumePower consumePower(float powerUsage, float minUsage, int ratedVoltage){
+        return consume(new xx_ConsumePower(powerUsage, minUsage, ratedVoltage));
     }
 
 

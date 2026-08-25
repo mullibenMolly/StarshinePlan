@@ -157,7 +157,6 @@ public class xx_Building extends Building {
         return "xx_PowerModule{"+
                 "\n当前电压voltage = "+power.voltage+" / "+
                 "\n当前电流current = "+power.current+" / "+
-                "\n电阻resistance = "+consPower.resistance+
                 "\n是并联parallelConnection = "+power.parallelConnection+
                 "\nstatus = "+ power.status +
                 "\n}";

@@ -7,7 +7,7 @@ import mindustry.entities.abilities.Ability;
 import mindustry.gen.Unit;
 import mindustry.ui.Bar;
 import xx.expand.F_CompositeUnitEntity;
-import xx.expand.xx_Pal;
+import xx.graphics.xx_Pal;
 
 public class ReviveLifeAbilityList extends Ability {
     public int revivesSum ;

@@ -6,7 +6,6 @@ import arc.struct.IntSet;
 import arc.struct.Queue;
 import arc.struct.Seq;
 import arc.util.Log;
-import arc.util.Nullable;
 import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
@@ -14,11 +13,9 @@ import xx.world.consumes.xx_ConsumePower;
 
 import java.lang.reflect.Field;
 
-//反射牛逼。
 public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，想要更加拟真，电脑会算冒烟的。这不是做电路模拟
     public int graphVoltage;//电压，这里指电压等级，如果真的用数值的话，我估计我会写死，玩家烦死，电脑算死
     public float powerLoss;
-    public float lineLossRate;
 
     private static Field entityField;//缓存
 
@@ -29,14 +26,11 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
     private static final Seq<Building> outArray2 = new Seq<>();
     private static final IntSet closedSet = new IntSet();
 
-    //private final @Nullable PowerGraphUpdater entity;//拥有极大的问题！！！
     private final WindowedMean powerBalance = new WindowedMean(60);
     private float lastPowerProduced, lastPowerNeeded, lastPowerStored;
     private float lastScaledPowerIn, lastScaledPowerOut, lastCapacity;
     //diodes workaround for correct energy production info
     private float energyDelta = 0f;
-
-    private static int lastGraphID;
 
     //运用反射
     static{
@@ -99,8 +93,9 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
     }
 
     //计算线损率
-    public float getLineLossRate(float power){
-        return (float) Mathf.round(powerLoss / power * 1000) / 10;
+    public float getLineLossRate(){
+        if(powerLoss == 0) return 0;
+        return (float) Mathf.round(powerLoss / lastPowerProduced * 1000) / 10;
     }
 
     //计算电力节点电阻
@@ -115,16 +110,17 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         return resistance;
     }
 
-    //计算损耗功率，线损
-    public float getPowerLoss(float power){
-        return Mathf.pow( power/graphVoltage ,2) * getSeriesResistance();
+    //计算损耗功率，线损功率
+    public float getPowerLoss(){
+        if(lastPowerProduced == 0) return 0;
+
+        return Mathf.pow( lastPowerProduced/graphVoltage ,2) * getSeriesResistance();
     }
 
     @Override
     public void add(Building build){
         super.add(build);
 
-        //我没招了
         powerNode.clear();
         powerNode.addAll(all.select(item -> item != null && item.block instanceof text_node2));
     }
@@ -198,7 +194,21 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         return powerProduced;
     }
 
-    @Override//总耗电电量
+    //总最小耗电功率
+    public float getPowerMinNeeded(){
+        float powerNeeded = 0f;
+        var items = consumers.items;
+        for(int i = 0; i < consumers.size; i++){
+            var consumer = items[i];
+            xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
+            if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
+                powerNeeded += consumePower.requestedMinPower(consumer);
+            }
+        }
+        return powerNeeded;
+    }
+
+    @Override//总额定耗电功率
     public float getPowerNeeded(){
         float powerNeeded = 0f;
         var items = consumers.items;
@@ -206,7 +216,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
             var consumer = items[i];
             xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
             if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
-                powerNeeded += consumePower.requestedPower(consumer) /* consumer.delta()*/;
+                powerNeeded += consumePower.requestedPower(consumer);
             }
         }
         return powerNeeded;
@@ -223,15 +233,32 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         return voltage;
     }
 
-
     @Override//电力分配
     public void distributePower(float needed, float produced, boolean charged) {
-        float coverage = Mathf.zero(needed) && Mathf.zero(produced) && !charged && Mathf.zero(lastPowerStored) ? 0f : Mathf.zero(needed) ? 1f : Math.min(1, produced / needed);
-        //电功率应该根据每个工厂的内阻与总阻的比值来分配，再根据分配来的功率与额定功率的比值确定电力满足度。
-        //当然，在这之中还要判断电压电流是否在合适范围内
-        //似乎用功率占比来分配电力更好，用电阻本质上是在做功率占比
         var items = consumers.items;
-        if (needed <= produced && !Mathf.zero(produced)) {
+
+        float minNeeded = getPowerMinNeeded();
+        //优先分情况，这里应该可以不用if，但我在想我这样弄是否可以在特定情况下节省点性能
+        //这里应该可以优化的
+
+        if (minNeeded <= produced && !Mathf.zero(produced)) {
+            for (int i = 0; i < consumers.size; i++) {
+                var consumer = items[i];
+
+                xx_ConsumePower consPower = (xx_ConsumePower) consumer.block.consPower;//该电网只会存在这种电力消耗模块
+
+                if (consumer.shouldConsumePower && graphVoltage >= consPower.ratedVoltage) {
+                    float obtained = consPower.usage / needed * produced;//得到的电功率
+                    float status = (obtained -  consPower.minUsage) / (consPower.usage - consPower.minUsage);//计算电力满足度
+                    consumer.power.status = Math.min(status , 1);
+                }
+                else {
+                    consumer.power.status =  produced >= (needed + consPower.minUsage)? 1 : 0 ;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+                }
+
+            }
+        }
+        else if(needed <= produced && !Mathf.zero(produced)){
             for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
@@ -256,7 +283,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
 
     }
 
-    @Override
+    @Override//电网每帧刷新
     public void update(){
         if(!consumers.isEmpty() && consumers.first().cheating()){
             //when cheating, just set status to 1
@@ -270,15 +297,17 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
 
         //Log.info("电网" + getID());
 
-        graphVoltage = getGraphVoltage();//计算电网电压
+
         float powerNeeded = getPowerNeeded();
         float powerProduced = getPowerProduced();
-        powerLoss = getPowerLoss(powerProduced);
-        lineLossRate = getLineLossRate(powerProduced);
 
+        //lineLossRate = getLineLossRate(powerProduced);
 
+        //虽然不知道源码为什么怎么写，但怎么写一定有它的意义...对吧
         lastPowerNeeded = powerNeeded + powerLoss;
         lastPowerProduced = powerProduced;
+        graphVoltage = getGraphVoltage();//计算电网电压
+        powerLoss = getPowerLoss();
 
 
         powerBalance.add(lastPowerProduced - lastPowerNeeded);//用于电力节点的bar
@@ -297,31 +326,10 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
                 }
             }
 
-            distributePower(powerNeeded + powerLoss, powerProduced, charged);
+            distributePower(powerNeeded, powerProduced - powerLoss, charged);
         }
     }
 
-//    @Override//用于连接两个电网
-//    public void addGraph(PowerGraph graph){
-//        if(graph instanceof xx_PowerGraph g) {
-//            if (g == this) return;
-//
-//
-//            //merge into other graph instead.
-//            if (g.all.size > all.size) {
-//                g.addGraph(this);
-//                return;
-//            }
-//
-//            //other entity should be removed as the graph was merged
-//            if (g.entity != null) g.entity.remove();
-//
-//            for (Building tile : g.all) {
-//                add(tile);
-//            }
-//            checkAdd();
-//        }
-//    }
 
     @Override//调试内容
     public String toString(){
@@ -335,10 +343,11 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
                 "\n个数all.size = "+all.size+
                 "\ngraphID = " + getID() +
                 "\n发电功率 = "+powerProduced+
-                "\n耗电功率 = "+getPowerNeeded()+
-                "\n损耗功率 = "+getPowerLoss(powerProduced)+
+                "\n耗电功率 = "+ getPowerMinNeeded()+
+                "\n损耗功率 = "+getPowerLoss()+
                 "\n电网电压 = "+graphVoltage+
                 "\n损耗电阻 = "+getSeriesResistance()+
+                "\n功率损率 = "+getLineLossRate()+
                 "\n}";
     }
 

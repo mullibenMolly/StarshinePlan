@@ -132,7 +132,7 @@ public class text_node2 extends PowerNode{
                     Core.bundle.format("bar.powerbalance2",
                             (graph.getPowerBalance() >= 0 ? "+" : "") +
                                     UI.formatAmount((long)graph.getPowerBalance()),
-                            UI.formatAmount((long) graph.lineLossRate)
+                                    graph.getLineLossRate()//这个是百分数，不用转换格式
                     ),
                     () -> Pal.powerBar,
                     () -> Mathf.clamp(graph.getLastPowerProduced() / graph.getLastPowerNeeded())

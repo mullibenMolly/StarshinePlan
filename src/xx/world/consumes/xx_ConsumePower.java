@@ -11,17 +11,16 @@ import xx.world.meta.xx_StatUnit;
 public class xx_ConsumePower extends ConsumePower {
 
         //remind usage就是需求功率，额定功率，这里的额定是最小功率，低于它将不工作
-        public float maxUsage;//最大功率，现在没什么用，用于过载判断及爆破
+        //remind maxUsage是block的字段
+        public float minUsage;//最小功率，用于机器不满效运行
 
         public int ratedVoltage = 1;//标准电压等级，可以高不能低，这是工作门槛
 
-        public float ratedCurrent = 1;//标准电流
-        public float minCurrent = 1;//最小电流
+//        public float ratedCurrent = 1;//标准电流
+//        public float minCurrent = 1;//最小电流
         //最大电流在block里，是机器本身的性质
 
 
-        public float resistance = 0.1f;//remind该配方的电阻，因为一个配方最多有一个xx_ConsumePower
-        //public float equivalentResistance;//remind 应该要有个等效电阻，即将所有电能转化为内能，这个电阻可以直接算出正确的电流
 
         //电力限制关于电压于电流，效率限制关于功率,感觉可以弄一个新的类
 
@@ -41,32 +40,34 @@ public class xx_ConsumePower extends ConsumePower {
                 this.buffered = buffered;
         }
 
-        public xx_ConsumePower(float usage , int ratedVoltage , float ratedCurrent , float minCurrent , float resistance){
+        //remind 这个才有用
+        public xx_ConsumePower(float usage , int ratedVoltage){
                 this(usage , 0 , false);
                 this.ratedVoltage = ratedVoltage;
-                this.ratedCurrent = ratedCurrent;
-                this.minCurrent = minCurrent;
-                this.resistance = resistance;
+                this.minUsage = usage;
         }
 
-        //remind 这个才有用
-        public xx_ConsumePower(float usage , int ratedVoltage , float resistance){
-                this(usage , 0 , false);
-                this.ratedVoltage = ratedVoltage;
-                this.resistance = resistance;
-                this.maxUsage = usage;
+        //提供最小功率设置
+        public xx_ConsumePower(float usage , float minUsage, int ratedVoltage){
+                this(usage , ratedVoltage);
+                this.minUsage = minUsage;
         }
 
         @Override
         public void display(Stats stats){
                 if(usage > 0f){
-                        stats.add(Stat.powerUse, usage, xx_StatUnit.powerSecond2);
-                        stats.add(xx_Stat.ratedVoltage, ratedVoltage, xx_StatUnit.voltage);
+                        stats.add(Stat.powerUse, usage, xx_StatUnit.powerSecond2);//额定功率
+                        stats.add(xx_Stat.minPowerUse, minUsage, xx_StatUnit.powerSecond2);//最小功率
+                        stats.add(xx_Stat.ratedVoltage, ratedVoltage, xx_StatUnit.voltage);//额定电压
                 }
         }
 
+        //最小功率
+        public float requestedMinPower(Building entity){
+                return minUsage * (entity.shouldConsume() ? 1f : 0f);
+        }
 
-        @Override
+        @Override//额定功率
         public float requestedPower(Building entity){
                 return usage * (entity.shouldConsume() ? 1f : 0f);
         }

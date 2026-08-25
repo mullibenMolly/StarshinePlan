@@ -28,7 +28,7 @@ public class xx_Blocks {
     public static Block
             electricityPylon,consumeCrafter;
 
-    public static Block text_crafter,text_node,text_production,text_powerNode;
+    public static Block text_crafter,text_node,text_production,text_powerNode,text_crafter2;
 
     public static void load(){
 
@@ -75,10 +75,30 @@ public class xx_Blocks {
             ambientSoundVolume = 0.07f;
 
             maxVoltage = 20;
-            maxCurrent = 20;
+            maxUsage = 100;
 
             consumeItems(with(Items.coal, 1, Items.sand, 2));
-            consumePower(5f, 10,1);
+            consumePower(5f, 10);
+            //consumePower(0.50f);
+        }};
+
+        text_crafter2 = new text_crafter("text_crafter2"){{
+            requirements(Category.crafting, with(Items.copper, 30, Items.lead, 25));
+            craftEffect = Fx.smeltsmoke;
+            outputItem = new ItemStack(Items.silicon, 1);
+            craftTime = 240f;
+            size = 2;
+            hasPower = true;
+            hasLiquids = false;
+            drawer = new DrawMulti(new DrawRegion("-bottom"), new DrawDefault());
+            ambientSound = Sounds.loopSmelter;
+            ambientSoundVolume = 0.07f;
+
+            maxVoltage = 20;
+            maxUsage = 100;
+
+            consumeItems(with(Items.coal, 1, Items.sand, 2));
+            consumePower(10f,5f , 10);
             //consumePower(0.50f);
         }};
 
