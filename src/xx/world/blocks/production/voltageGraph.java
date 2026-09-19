@@ -1,5 +1,7 @@
 package xx.world.blocks.production;
 
+import mindustry.gen.Building;
+
 public interface voltageGraph {
     //使用该mod的电网必须的条件。
     float getRatePowerConsumption();//额定功率消耗，同时作为电网电力分配的比例系数
@@ -16,4 +18,5 @@ public interface voltageGraph {
 
     float getMaxOverclockEfficiency();//超频功率效率，输入功率中超出额定功率的那部分功率的效率。就比如额外输入一倍的功率，却只能提升0.5倍的效率。
 
+    void setPowerStatus(Building building, float status);//设置电力满足度
 }

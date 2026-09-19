@@ -7,6 +7,7 @@ import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.core.Renderer;
+import mindustry.gen.Building;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Pal;
 import mindustry.logic.LAccess;
@@ -31,7 +32,7 @@ import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
-public class text_crafter extends GenericCrafter {
+public class text_crafter extends GenericCrafter implements voltageGraph{
 
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
     //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
@@ -122,6 +123,47 @@ public class text_crafter extends GenericCrafter {
             }
         }
     }
+
+    @Override
+    public float getRatePowerConsumption() {
+        return consPower.usage;
+    }
+
+    @Override
+    public float getMaxAcceptablePower() {
+        return this.maxUsage;
+    }
+
+    @Override
+    public int getRateVoltageConsumption() {
+        return ((xx_ConsumePower)consPower).ratedVoltage;
+    }
+
+    @Override
+    public int getMaxAcceptableVoltage() {
+        return maxVoltage;
+    }
+
+    @Override
+    public void powerOverload() {
+        //TODO none！
+    }
+
+    @Override
+    public float getOverclockPowerConsumption() {
+        return 0;//TODO 当前用于占位
+    }
+
+    @Override
+    public float getMaxOverclockEfficiency() {
+        return 0;//TODO 当前用于占位
+    }
+
+    @Override
+    public void setPowerStatus(Building building, float status) {
+        building.power.status = status;
+    }
+
 
     public class TextBuild extends xx_Building {
         public float progress;
@@ -319,5 +361,6 @@ public class text_crafter extends GenericCrafter {
         }
 
     }
+
 
 }

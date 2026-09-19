@@ -10,9 +10,9 @@ import xx.world.meta.xx_StatUnit;
 
 public class xx_ConsumePower extends ConsumePower {
 
-        //remind usage就是需求功率，额定功率，这里的额定是最小功率，低于它将不工作
+        //remind usage就是需求功率，额定功率，这里的额定是最小功率
         //remind maxUsage是block的字段
-        public float minUsage;//最小功率，用于机器不满效运行
+        //public float minUsage;//最小功率，用于机器不满效运行,不应存在
 
         public int ratedVoltage = 1;//标准电压等级，可以高不能低，这是工作门槛
 
@@ -44,28 +44,28 @@ public class xx_ConsumePower extends ConsumePower {
         public xx_ConsumePower(float usage , int ratedVoltage){
                 this(usage , 0 , false);
                 this.ratedVoltage = ratedVoltage;
-                this.minUsage = usage;
+                //this.minUsage = usage;
         }
 
         //提供最小功率设置
         public xx_ConsumePower(float usage , float minUsage, int ratedVoltage){
                 this(usage , ratedVoltage);
-                this.minUsage = minUsage;
+                //this.minUsage = minUsage;
         }
 
         @Override
         public void display(Stats stats){
                 if(usage > 0f){
                         stats.add(Stat.powerUse, usage, xx_StatUnit.powerSecond2);//额定功率
-                        stats.add(xx_Stat.minPowerUse, minUsage, xx_StatUnit.powerSecond2);//最小功率
+                        //stats.add(xx_Stat.minPowerUse, minUsage, xx_StatUnit.powerSecond2);//最小功率
                         stats.add(xx_Stat.ratedVoltage, ratedVoltage, xx_StatUnit.voltage);//额定电压
                 }
         }
 
         //最小功率
-        public float requestedMinPower(Building entity){
-                return minUsage * (entity.shouldConsume() ? 1f : 0f);
-        }
+//        public float requestedMinPower(Building entity){
+//                return minUsage * (entity.shouldConsume() ? 1f : 0f);
+//        }
 
         @Override//额定功率
         public float requestedPower(Building entity){

@@ -9,12 +9,14 @@ import arc.util.Log;
 import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
+import mindustry.world.consumers.ConsumePower;
+import xx.world.blocks.production.voltageGraph;
 import xx.world.consumes.xx_ConsumePower;
 
 import java.lang.reflect.Field;
 
-public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，想要更加拟真，电脑会算冒烟的。这不是做电路模拟
-    public int graphVoltage;//电压，这里指电压等级，如果真的用数值的话，我估计我会写死，玩家烦死，电脑算死
+public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，想要更加拟真，但我不会写。这不是电路模拟！
+    public int graphVoltage;//电压，这里指电压等级，如果真的用数值的话，我估计我会写死。
     public float powerLoss;
 
     private static Field entityField;//缓存
@@ -54,6 +56,16 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
     public xx_PowerGraph(boolean noEntity){
         super();
     }
+
+    @Override
+    public float getSatisfaction(){
+        if(Mathf.zero(lastPowerProduced)){
+            return 0f;
+        }else if(Mathf.zero(lastPowerNeeded)){
+            return 1f;
+        }
+        return Mathf.clamp(lastPowerProduced / lastPowerNeeded);
+    }//计算电力满意度，与电力节点的连接线缆的亮度有关
 
 
     private void initEntity() {
@@ -195,28 +207,28 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
     }
 
     //总最小耗电功率
-    public float getPowerMinNeeded(){
-        float powerNeeded = 0f;
-        var items = consumers.items;
-        for(int i = 0; i < consumers.size; i++){
-            var consumer = items[i];
-            xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
-            if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
-                powerNeeded += consumePower.requestedMinPower(consumer);
-            }
-        }
-        return powerNeeded;
-    }
+//    public float getPowerMinNeeded(){
+//        float powerNeeded = 0f;
+//        var items = consumers.items;
+//        for(int i = 0; i < consumers.size; i++){
+//            var consumer = items[i];
+//            xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
+//            if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
+//                powerNeeded += consumePower.requestedMinPower(consumer);
+//            }
+//        }
+//        return powerNeeded;
+//    }
 
-    @Override//总额定耗电功率
+    @Override//总额定耗电功率，排除电压不符的
     public float getPowerNeeded(){
         float powerNeeded = 0f;
         var items = consumers.items;
         for(int i = 0; i < consumers.size; i++){
             var consumer = items[i];
-            xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
-            if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
-                powerNeeded += consumePower.requestedPower(consumer);
+            voltageGraph v =  (voltageGraph) consumer.block;
+            if(consumer.shouldConsumePower && v.getRateVoltageConsumption() >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
+                powerNeeded += consumer.block.consPower.requestedPower(consumer);
             }
         }
         return powerNeeded;
@@ -228,7 +240,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         var items = producers.items;
         for(int i = 0; i < producers.size; i++){
             var producer = items[i];
-            voltage = Math.max( ((xx_ConsumeGenerator.xx_ConsumeGeneratorBuild) producer).getProtentionVoltage() , voltage );
+            voltage = Math.max( ((xx_ConsumeGenerator.xx_ConsumeGeneratorBuild) producer).getProtentionVoltage() , voltage );//TODO这里应该也要改成接口，有关电力生产的接口
         }
         return voltage;
     }
@@ -237,49 +249,55 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
     public void distributePower(float needed, float produced, boolean charged) {
         var items = consumers.items;
 
-        float minNeeded = getPowerMinNeeded();
+        //float minNeeded = getPowerMinNeeded();
         //优先分情况，这里应该可以不用if，但我在想我这样弄是否可以在特定情况下节省点性能
         //这里应该可以优化的
 
-        if (minNeeded <= produced && !Mathf.zero(produced)) {
+        //if (needed <= produced && !Mathf.zero(produced)) {
             for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
-                xx_ConsumePower consPower = (xx_ConsumePower) consumer.block.consPower;//该电网只会存在这种电力消耗模块
+                voltageGraph v = (voltageGraph)consumer.block;//我实在不知道这该取什么名字。这作为附加属性
 
-                if (consumer.shouldConsumePower && graphVoltage >= consPower.ratedVoltage) {
-                    float obtained = consPower.usage / needed * produced;//得到的电功率
-                    float status = (obtained -  consPower.minUsage) / (consPower.usage - consPower.minUsage);//计算电力满足度
-                    consumer.power.status = Math.min(status , 1);
-                }
-                else {
-                    consumer.power.status =  produced >= (needed + consPower.minUsage)? 1 : 0 ;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
-                }
 
+
+                ConsumePower consPower = consumer.block.consPower;
+
+                if(graphVoltage >= v.getRateVoltageConsumption()) {
+
+                    if (consumer.shouldConsumePower) {//对比电网电压与机器额定电压
+                        float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
+                        consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1);//计算电力满足度
+                    } else {
+                        consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+                    }
+
+                }
+                else consumer.power.status = 0;//电压不匹配，直接=0
             }
-        }
-        else if(needed <= produced && !Mathf.zero(produced)){
-            for (int i = 0; i < consumers.size; i++) {
-                var consumer = items[i];
-
-                xx_ConsumePower consPower = (xx_ConsumePower) consumer.block.consPower;//该电网只会存在这种电力消耗模块
-
-                if (consumer.shouldConsumePower && graphVoltage >= consPower.ratedVoltage) {
-                    consumer.power.status = 1;
-                }
-                else {
-                    consumer.power.status =  produced >= (needed + consPower.usage)? 1 : 0 ;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
-                }
-
-            }
-        }
-        else
-        {
-            for (int i = 0; i < consumers.size; i++) {
-                var consumer = items[i];
-                consumer.power.status = 0;
-            }
-        }
+        //}
+//        else if(needed <= produced && !Mathf.zero(produced)){
+//            for (int i = 0; i < consumers.size; i++) {
+//                var consumer = items[i];
+//
+//                xx_ConsumePower consPower = (xx_ConsumePower) consumer.block.consPower;//该电网只会存在这种电力消耗模块
+//
+//                if (consumer.shouldConsumePower && graphVoltage >= consPower.ratedVoltage) {
+//                    consumer.power.status = 1;
+//                }
+//                else {
+//                    consumer.power.status =  produced >= (needed + consPower.usage)? 1 : 0 ;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+//                }
+//
+//            }
+//        }
+//        else
+//        {
+//            for (int i = 0; i < consumers.size; i++) {
+//                var consumer = items[i];
+//                consumer.power.status = 0;
+//            }
+//        }
 
     }
 
@@ -303,7 +321,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
 
         //lineLossRate = getLineLossRate(powerProduced);
 
-        //虽然不知道源码为什么怎么写，但怎么写一定有它的意义...对吧
+        //虽然不知道源码为什么这么写，但这么写一定有它的意义...对吧
         lastPowerNeeded = powerNeeded + powerLoss;
         lastPowerProduced = powerProduced;
         graphVoltage = getGraphVoltage();//计算电网电压
@@ -343,7 +361,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
                 "\n个数all.size = "+all.size+
                 "\ngraphID = " + getID() +
                 "\n发电功率 = "+powerProduced+
-                "\n耗电功率 = "+ getPowerMinNeeded()+
+                //"\n耗电功率 = "+ getPowerMinNeeded()+
                 "\n损耗功率 = "+getPowerLoss()+
                 "\n电网电压 = "+graphVoltage+
                 "\n损耗电阻 = "+getSeriesResistance()+
