@@ -21,6 +21,8 @@ import mindustry.world.meta.StatUnit;
 import mindustry.world.meta.StatValues;
 import mindustry.world.modules.ItemModule;
 import mindustry.world.modules.LiquidModule;
+import xx.world.blocks.production.voltageGraph_in;
+import xx.world.blocks.production.voltageGraph_out;
 import xx.world.meta.xx_Stat;
 import xx.world.meta.xx_StatUnit;
 import xx.world.modules.xx_PowerModule;
@@ -29,7 +31,7 @@ import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
-public class xx_ConsumeGenerator extends ConsumeGenerator {
+public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGraph_out {
     public int protentionVoltage;//TODO 记得将powerProduction与这个并到一起去
 
 

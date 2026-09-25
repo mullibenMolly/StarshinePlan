@@ -2,7 +2,6 @@ package xx.world.blocks.production;
 
 import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
-import arc.util.Log;
 import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
@@ -19,20 +18,16 @@ import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.blocks.production.GenericCrafter;
 import mindustry.world.consumers.Consume;
 import mindustry.world.consumers.ConsumePower;
-import mindustry.world.meta.Stat;
-import mindustry.world.meta.StatUnit;
-import mindustry.world.meta.StatValues;
 import xx.gen.xx_Building;
 import xx.world.consumes.xx_ConsumePower;
 import xx.world.meta.xx_Stat;
 import xx.world.meta.xx_StatUnit;
-import xx.world.modules.xx_PowerModule;
 
 import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
-public class text_crafter extends GenericCrafter implements voltageGraph{
+public class text_crafter extends GenericCrafter implements voltageGraph_in {
 
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
     //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
@@ -162,6 +157,11 @@ public class text_crafter extends GenericCrafter implements voltageGraph{
     @Override
     public void setPowerStatus(Building building, float status) {
         building.power.status = status;
+    }
+
+    @Override
+    public float getImpedance() {
+        return getRateVoltageConsumption() * getRateVoltageConsumption() / getRatePowerConsumption()  ;
     }
 
 

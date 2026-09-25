@@ -10,8 +10,8 @@ import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.consumers.ConsumePower;
-import xx.world.blocks.production.voltageGraph;
-import xx.world.consumes.xx_ConsumePower;
+import xx.world.blocks.production.voltageGraph_in;
+import xx.world.blocks.production.voltageGraph_out;
 
 import java.lang.reflect.Field;
 
@@ -122,7 +122,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         return resistance;
     }
 
-    //计算损耗功率，线损功率
+    //计算损耗功率，线损功率加发电机阻抗
     public float getPowerLoss(){
         if(lastPowerProduced == 0) return 0;
 
@@ -226,7 +226,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         var items = consumers.items;
         for(int i = 0; i < consumers.size; i++){
             var consumer = items[i];
-            voltageGraph v =  (voltageGraph) consumer.block;
+            voltageGraph_in v =  (voltageGraph_in) consumer.block;
             if(consumer.shouldConsumePower && v.getRateVoltageConsumption() >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
                 powerNeeded += consumer.block.consPower.requestedPower(consumer);
             }
@@ -257,7 +257,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
             for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
-                voltageGraph v = (voltageGraph)consumer.block;//我实在不知道这该取什么名字。这作为附加属性
+                voltageGraph_in v = (voltageGraph_in)consumer.block;//我实在不知道这该取什么名字。这作为附加属性
 
 
 
