@@ -159,11 +159,6 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
         building.power.status = status;
     }
 
-    @Override
-    public float getImpedance() {
-        return getRateVoltageConsumption() * getRateVoltageConsumption() / getRatePowerConsumption()  ;
-    }
-
 
     public class TextBuild extends xx_Building {
         public float progress;
