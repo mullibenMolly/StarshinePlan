@@ -27,7 +27,7 @@ import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
-public class text_crafter extends GenericCrafter implements voltageGraph_in {
+public class text_crafter extends GenericCrafter{
 
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
     //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
@@ -119,90 +119,48 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
         }
     }
 
-    @Override
-    public float getRatePowerConsumption() {
-        return consPower.usage;
-    }
-
-    @Override
-    public float getMaxAcceptablePower() {
-        return this.maxUsage;
-    }
-
-    @Override
-    public int getRateVoltageConsumption() {
-        return ((xx_ConsumePower)consPower).ratedVoltage;
-    }
-
-    @Override
-    public int getMaxAcceptableVoltage() {
-        return maxVoltage;
-    }
-
-    @Override
-    public void powerOverload() {
-        //TODO none！
-    }
-
-    @Override
-    public float getOverclockPowerConsumption() {
-        return 0;//TODO 当前用于占位
-    }
-
-    @Override
-    public float getMaxOverclockEfficiency() {
-        return 0;//TODO 当前用于占位
-    }
-
-    @Override
-    public void setPowerStatus(Building building, float status) {
-        building.power.status = status;
-    }
-
-
-    public class TextBuild extends xx_Building {
+    public class TextBuild extends xx_Building implements voltageGraph_in {
         public float progress;
         public float totalProgress;
         public float warmup;
 
         @Override
-        public void draw(){
+        public void draw() {
             drawer.draw(this);
         }
 
         @Override
-        public void drawLight(){
+        public void drawLight() {
             super.drawLight();
             drawer.drawLight(this);
         }
 
 
-
         @Override
-        public boolean shouldConsume(){
-            if(outputItems != null){
-                for(var output : outputItems){
-                    if(items.get(output.item) + output.amount > itemCapacity){
+        public boolean shouldConsume() {
+            if (outputItems != null) {
+                for (var output : outputItems) {
+                    if (items.get(output.item) + output.amount > itemCapacity) {
                         return false;
                     }
                 }
             }
 
-            if(outputLiquids != null && !ignoreLiquidFullness){
+            if (outputLiquids != null && !ignoreLiquidFullness) {
                 boolean allFull = true;
-                for(var output : outputLiquids){
-                    if(liquids.get(output.liquid) >= liquidCapacity - 0.001f){
-                        if(!dumpExtraLiquid){
+                for (var output : outputLiquids) {
+                    if (liquids.get(output.liquid) >= liquidCapacity - 0.001f) {
+                        if (!dumpExtraLiquid) {
                             return false;
                         }
-                    }else{
+                    } else {
                         //if there's still space left, it's not full for all liquids
                         allFull = false;
                     }
                 }
 
                 //if there is no space left for any liquid, it can't reproduce
-                if(allFull){
+                if (allFull) {
                     return false;
                 }
             }
@@ -211,31 +169,31 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
         }
 
         @Override
-        public void updateTile(){
-            if(efficiency > 0){
+        public void updateTile() {
+            if (efficiency > 0) {
 
                 progress += getProgressIncrease(craftTime);
                 warmup = Mathf.approachDelta(warmup, warmupTarget(), warmupSpeed);
 
                 //continuously output based on efficiency
-                if(outputLiquids != null){
+                if (outputLiquids != null) {
                     float inc = getProgressIncrease(1f);
-                    for(var output : outputLiquids){
+                    for (var output : outputLiquids) {
                         handleLiquid(this, output.liquid, Math.min(output.amount * inc, liquidCapacity - liquids.get(output.liquid)));
                     }
                 }
 
-                if(wasVisible && Mathf.chanceDelta(updateEffectChance)){
+                if (wasVisible && Mathf.chanceDelta(updateEffectChance)) {
                     updateEffect.at(x + Mathf.range(size * updateEffectSpread), y + Mathf.range(size * updateEffectSpread));
                 }
-            }else{
+            } else {
                 warmup = Mathf.approachDelta(warmup, 0f, warmupSpeed);
             }
 
             //TODO may look bad, revert to edelta() if so
             totalProgress += warmup * Time.delta;
 
-            if(progress >= 1f){
+            if (progress >= 1f) {
                 craft();
             }
 
@@ -243,16 +201,16 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
         }
 
         @Override
-        public float getProgressIncrease(float baseTime){
-            if(ignoreLiquidFullness){
+        public float getProgressIncrease(float baseTime) {
+            if (ignoreLiquidFullness) {
                 return super.getProgressIncrease(baseTime);
             }
 
             //limit progress increase by maximum amount of liquid it can produce
             float scaling = 1f, max = 1f;
-            if(outputLiquids != null){
+            if (outputLiquids != null) {
                 max = 0f;
-                for(var s : outputLiquids){
+                for (var s : outputLiquids) {
                     float value = (liquidCapacity - liquids.get(s.liquid)) / (s.amount * edelta());
                     scaling = Math.min(scaling, value);
                     max = Math.max(max, value);
@@ -263,46 +221,46 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
             return super.getProgressIncrease(baseTime) * (dumpExtraLiquid ? Math.min(max, 1f) : scaling);
         }
 
-        public float warmupTarget(){
+        public float warmupTarget() {
             return 1f;
         }
 
         @Override
-        public float warmup(){
+        public float warmup() {
             return warmup;
         }
 
         @Override
-        public float totalProgress(){
+        public float totalProgress() {
             return totalProgress;
         }
 
-        public void craft(){
+        public void craft() {
             consume();
 
-            if(outputItems != null){
-                for(var output : outputItems){
-                    for(int i = 0; i < output.amount; i++){
+            if (outputItems != null) {
+                for (var output : outputItems) {
+                    for (int i = 0; i < output.amount; i++) {
                         offload(output.item);
                     }
                 }
             }
 
-            if(wasVisible){
+            if (wasVisible) {
                 craftEffect.at(x, y);
             }
             progress %= 1f;
         }
 
-        public void dumpOutputs(){
-            if(outputItems != null && timer(timerDump, dumpTime / timeScale)){
-                for(ItemStack output : outputItems){
+        public void dumpOutputs() {
+            if (outputItems != null && timer(timerDump, dumpTime / timeScale)) {
+                for (ItemStack output : outputItems) {
                     dump(output.item);
                 }
             }
 
-            if(outputLiquids != null){
-                for(int i = 0; i < outputLiquids.length; i++){
+            if (outputLiquids != null) {
+                for (int i = 0; i < outputLiquids.length; i++) {
                     int dir = liquidOutputDirections.length > i ? liquidOutputDirections[i] : -1;
 
                     dumpLiquid(outputLiquids[i].liquid, 2f, dir);
@@ -311,51 +269,89 @@ public class text_crafter extends GenericCrafter implements voltageGraph_in {
         }
 
         @Override
-        public double sense(LAccess sensor){
-            if(sensor == LAccess.progress) return progress();
+        public double sense(LAccess sensor) {
+            if (sensor == LAccess.progress) return progress();
             //attempt to prevent wild total liquid fluctuation, at least for crafters
-            if(sensor == LAccess.totalLiquids && outputLiquid != null) return liquids.get(outputLiquid.liquid);
+            if (sensor == LAccess.totalLiquids && outputLiquid != null) return liquids.get(outputLiquid.liquid);
             return super.sense(sensor);
         }
 
         @Override
-        public float progress(){
+        public float progress() {
             return Mathf.clamp(progress);
         }
 
         @Override
-        public int getMaximumAccepted(Item item){
+        public int getMaximumAccepted(Item item) {
             return itemCapacity;
         }
 
         @Override
-        public boolean shouldAmbientSound(){
+        public boolean shouldAmbientSound() {
             return efficiency > 0;
         }
 
         @Override
-        public void write(Writes write){
+        public void write(Writes write) {
             super.write(write);
             write.f(progress);
             write.f(warmup);
-            if(legacyReadWarmup) write.f(0f);
+            if (legacyReadWarmup) write.f(0f);
         }
 
         @Override
-        public void read(Reads read, byte revision){
+        public void read(Reads read, byte revision) {
             super.read(read, revision);
             progress = read.f();
             warmup = read.f();
-            if(legacyReadWarmup) read.f();
+            if (legacyReadWarmup) read.f();
         }
 
 
         @Override//用于调试
-        public String getPowerAll(){
+        public String getPowerAll() {
             return super.getPowerAll();
         }
 
+        @Override
+        public float getRatePowerConsumption() {
+            return consPower.usage;
+        }
+
+        @Override
+        public float getMaxAcceptablePower() {
+            return maxUsage;
+        }
+
+        @Override
+        public int getRateVoltageConsumption() {
+            return ((xx_ConsumePower) consPower).ratedVoltage;
+        }
+
+        @Override
+        public int getMaxAcceptableVoltage() {
+            return maxVoltage;
+        }
+
+        @Override
+        public void powerOverload() {
+            //TODO none！
+        }
+
+        @Override
+        public float getOverclockPowerConsumption() {
+            return 0;//TODO 当前用于占位
+        }
+
+        @Override
+        public float getMaxOverclockEfficiency() {
+            return 0;//TODO 当前用于占位
+        }
+
+        @Override
+        public void setPowerStatus(Building building, float status) {
+            building.power.status = status;
+        }
+
     }
-
-
 }

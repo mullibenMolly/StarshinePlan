@@ -132,6 +132,21 @@ public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGrap
         }
     }
 
+    @Override
+    public float getMaxLoadPower() {
+        return 0;
+    }
+
+    @Override
+    public int getOutputVoltage() {
+        return 0;
+    }
+
+    @Override
+    public void electricityCollapse() {
+
+    }
+
     public class xx_ConsumeGeneratorBuild extends ConsumeGeneratorBuild{
         public int productionVoltage;//当前产生的电压，用于电网电压，工作时
         //public

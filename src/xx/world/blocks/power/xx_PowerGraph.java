@@ -226,7 +226,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         var items = consumers.items;
         for(int i = 0; i < consumers.size; i++){
             var consumer = items[i];
-            voltageGraph_in v =  (voltageGraph_in) consumer.block;
+            voltageGraph_in v =  (voltageGraph_in) consumer;
             if(consumer.shouldConsumePower && v.getRateVoltageConsumption() >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
                 powerNeeded += consumer.block.consPower.requestedPower(consumer);
             }
@@ -257,7 +257,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
             for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
-                voltageGraph_in v = (voltageGraph_in)consumer.block;//我实在不知道这该取什么名字。这作为附加属性
+                voltageGraph_in v = (voltageGraph_in)consumer;//我实在不知道这该取什么名字。这作为附加属性
 
 
 
