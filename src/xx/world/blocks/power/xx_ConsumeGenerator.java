@@ -31,7 +31,7 @@ import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
-public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGraph_out {
+public class xx_ConsumeGenerator extends ConsumeGenerator {
     public int protentionVoltage;//TODO 记得将powerProduction与这个并到一起去
 
 
@@ -132,23 +132,8 @@ public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGrap
         }
     }
 
-    @Override
-    public float getMaxLoadPower() {
-        return 0;
-    }
-
-    @Override
-    public int getOutputVoltage() {
-        return 0;
-    }
-
-    @Override
-    public void electricityCollapse() {
-
-    }
-
-    public class xx_ConsumeGeneratorBuild extends ConsumeGeneratorBuild{
-        public int productionVoltage;//当前产生的电压，用于电网电压，工作时
+    public class xx_ConsumeGeneratorBuild extends ConsumeGeneratorBuild implements voltageGraph_out {
+        //public int productionVoltage;//当前产生的电压，用于电网电压，工作时
         //public
 
         @Override
@@ -197,11 +182,6 @@ public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGrap
             return this;
         }
 
-        //获取生成电压，与效率相乘
-        public int getProtentionVoltage() {
-            return (int) (protentionVoltage * productionEfficiency);
-        }
-
         @Override
         public void placed() {
             if (!Vars.net.client()) {
@@ -215,6 +195,21 @@ public class xx_ConsumeGenerator extends ConsumeGenerator implements voltageGrap
                 }
 
             }
+        }
+
+        @Override
+        public float getMaxLoadPower() {
+            return 0;//TODO
+        }
+
+        @Override
+        public int getOutputVoltage() {
+            return (int) (protentionVoltage * productionEfficiency);
+        }
+
+        @Override
+        public void electricityCollapse() {
+        //TODO
         }
     }
 }

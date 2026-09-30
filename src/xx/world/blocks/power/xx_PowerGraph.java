@@ -10,6 +10,7 @@ import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.consumers.ConsumePower;
+import xx.world.blocks.production.voltageGraph;
 import xx.world.blocks.production.voltageGraph_in;
 import xx.world.blocks.production.voltageGraph_out;
 
@@ -239,8 +240,8 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         int voltage = 0;
         var items = producers.items;
         for(int i = 0; i < producers.size; i++){
-            var producer = items[i];
-            voltage = Math.max( ((xx_ConsumeGenerator.xx_ConsumeGeneratorBuild) producer).getProtentionVoltage() , voltage );//TODO这里应该也要改成接口，有关电力生产的接口
+            voltageGraph_out v =  (voltageGraph_out) items[i];
+            voltage = Math.max( v.getOutputVoltage() , voltage );
         }
         return voltage;
     }
