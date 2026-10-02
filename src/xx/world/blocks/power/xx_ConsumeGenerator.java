@@ -218,8 +218,8 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
 
         @Override
         public float getMaxLoadPower() {
-            return powerProduction;//TODO
-        }
+            return powerProduction * ( ( 1f +  productionEfficiency) / 2);
+        }//默认50%
 
         @Override
         public int getOutputVoltage() {
