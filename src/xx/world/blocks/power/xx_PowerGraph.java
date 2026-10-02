@@ -16,8 +16,8 @@ import xx.world.blocks.production.voltageGraph_out;
 
 import java.lang.reflect.Field;
 
-public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，想要更加拟真，但我不会写。这不是电路模拟！
-    public int graphVoltage;//电压，这里指电压等级，如果真的用数值的话，我估计我会写死。
+public class xx_PowerGraph extends PowerGraph {
+    public int graphVoltage;
     public float powerLoss;
 
     private static Field entityField;//缓存
@@ -196,30 +196,21 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
         if(entity != null) entity.remove();
     }
 
-    @Override//总产电功率
+    @Override//总产电功率，排除电压不符的
     public float getPowerProduced(){
         float powerProduced = 0f;
         var items = producers.items;
         for(int i = 0; i < producers.size; i++){
+
             var producer = items[i];
-            powerProduced += producer.getPowerProduction() /* producer.delta()*/;
+            voltageGraph_out v = (voltageGraph_out)producer;
+
+            if(v.getOutputVoltage() >= graphVoltage) {
+                powerProduced += producer.getPowerProduction();
+            }
         }
         return powerProduced;
     }
-
-    //总最小耗电功率
-//    public float getPowerMinNeeded(){
-//        float powerNeeded = 0f;
-//        var items = consumers.items;
-//        for(int i = 0; i < consumers.size; i++){
-//            var consumer = items[i];
-//            xx_ConsumePower consumePower = (xx_ConsumePower) consumer.block.consPower;
-//            if(consumer.shouldConsumePower && consumePower.ratedVoltage >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
-//                powerNeeded += consumePower.requestedMinPower(consumer);
-//            }
-//        }
-//        return powerNeeded;
-//    }
 
     @Override//总额定耗电功率，排除电压不符的
     public float getPowerNeeded(){
@@ -244,6 +235,19 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
             voltage = Math.max( v.getOutputVoltage() , voltage );
         }
         return voltage;
+    }
+
+    //检测电网电力的功率，用于电力崩溃，电压不符的也会受到影响，所以分开来写
+    public void examinePower(){
+        var items = producers.items;
+        for(int i = 0; i < producers.size; i++){
+            voltageGraph_out v =  (voltageGraph_out) items[i];
+            if(v.getMaxLoadPower() < lastPowerNeeded - lastPowerProduced){
+                v.electricityCollapse();//电力过载
+                Log.info(lastPowerNeeded);
+            }
+
+        }
     }
 
     @Override//电力分配
@@ -346,6 +350,7 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
             }
 
             distributePower(powerNeeded, powerProduced - powerLoss, charged);
+            examinePower();
         }
     }
 
@@ -362,7 +367,6 @@ public class xx_PowerGraph extends PowerGraph {//极具简化的电力系统，�
                 "\n个数all.size = "+all.size+
                 "\ngraphID = " + getID() +
                 "\n发电功率 = "+powerProduced+
-                //"\n耗电功率 = "+ getPowerMinNeeded()+
                 "\n损耗功率 = "+getPowerLoss()+
                 "\n电网电压 = "+graphVoltage+
                 "\n损耗电阻 = "+getSeriesResistance()+

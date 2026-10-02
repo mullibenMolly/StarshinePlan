@@ -3,7 +3,9 @@ package xx.world.blocks.power;
 import arc.Core;
 import arc.graphics.g2d.Draw;
 import arc.util.Interval;
+import arc.util.Log;
 import arc.util.Strings;
+import arc.util.Time;
 import mindustry.Vars;
 import mindustry.core.Renderer;
 import mindustry.game.Team;
@@ -34,13 +36,14 @@ import static mindustry.Vars.tilesize;
 public class xx_ConsumeGenerator extends ConsumeGenerator {
     public int protentionVoltage;//TODO 记得将powerProduction与这个并到一起去
 
+    public float electricityCollapseDelay = 30;//崩溃时间
 
     public xx_ConsumeGenerator(String name) {
         super(name);
         this.connectedPower = false;
     }
 
-    @Override
+    @Override//状态栏
     public void setBars(){
         super.setBars();
 
@@ -50,11 +53,12 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
 
         if(hasPower && outputsPower){
             removeBar("power");
-            addBar("power", (GeneratorBuild entity) -> new Bar(() ->
-                    Core.bundle.format("bar.poweroutput2",
+            addBar("power", (xx_ConsumeGeneratorBuild entity) -> new Bar(
+                    () -> Core.bundle.format("bar.poweroutput2",
                             Strings.fixed(entity.getPowerProduction(), 1)),
                     () -> Pal.powerBar,
-                    () -> entity.productionEfficiency));
+                    () -> entity.electricityCollapse ? entity.timer_electricityCollapse / (electricityCollapseDelay * 60) : entity.productionEfficiency
+            ));//崩溃回复时间显示，与这个混在一起，我不想再来个进度条
         }
 
         if(outputLiquid != null){
@@ -105,9 +109,6 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
         }
     }
 
-
-
-
     @Override
     public void drawPotentialLinks(int x, int y){
         if((consumesPower || outputsPower) && hasPower){//remind 判断很有问题，但目前没问题。
@@ -135,6 +136,10 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
     public class xx_ConsumeGeneratorBuild extends ConsumeGeneratorBuild implements voltageGraph_out {
         //public int productionVoltage;//当前产生的电压，用于电网电压，工作时
         //public
+
+
+        public boolean electricityCollapse = false;
+        public float timer_electricityCollapse = 0;//计时器
 
         @Override
         public Building init(Tile tile, Team team, boolean shouldAdd, int rotation) {
@@ -198,8 +203,22 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
         }
 
         @Override
+        public void updateTile(){
+            if(electricityCollapse) {
+                efficiency = 0;
+                timer_electricityCollapse += Time.delta;
+            }
+            //发生电力崩溃后立即尝试重启
+            if(timer_electricityCollapse >= electricityCollapseDelay * 60){
+                electricityCollapse = false;
+                timer_electricityCollapse = 0;
+            }
+            super.updateTile();
+        }
+
+        @Override
         public float getMaxLoadPower() {
-            return 0;//TODO
+            return powerProduction;//TODO
         }
 
         @Override
@@ -209,7 +228,8 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
 
         @Override
         public void electricityCollapse() {
-        //TODO
+            electricityCollapse = true;
+            timer_electricityCollapse = 0;
         }
     }
 }
