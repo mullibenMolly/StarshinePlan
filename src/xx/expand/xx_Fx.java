@@ -1,5 +1,6 @@
 package xx.expand;
 
+import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
@@ -7,7 +8,9 @@ import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
+import arc.util.Log;
 import mindustry.entities.Effect;
+import mindustry.gen.Unit;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
@@ -106,7 +109,9 @@ public class xx_Fx {
     });
 
     public static final Effect f_AheadCharge = new Effect(205f, e -> {
-        float angle = e.rotation;
+        Unit u = (Unit)e.data;
+        float angle = ((F_CompositeUnitEntity)u).extraRotation + u.rotation;//我的判断没有问题，经过11.4514s的思考，我就判断出这里要考虑单位角度
+        //Log.info("e里"+e.rotation);
 
         Draw.z(Layer.effect);
         Draw.color(Color.white, 1f);

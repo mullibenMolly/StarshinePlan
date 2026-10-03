@@ -35,7 +35,7 @@ public class LinkRailBullet extends BasicBulletType {
 
         float radius = linkBullet.lifetime * linkBullet.speed;
         if (linkBullet instanceof RailBulletType lb){
-            radius = lb.length;
+            radius = lb.length;//范围
         }
         Units.nearbyEnemies(b.team, b.x, b.y, radius, unit -> {
             if (!unit.isValid() || unit.dead()) return;
@@ -51,7 +51,7 @@ public class LinkRailBullet extends BasicBulletType {
 
     }
 
-    public float distanceToMapBoundary(float x, float y) {
+    public float distanceToMapBoundary(float x, float y) {//优化子弹，判断是否超出地图
         float width = Vars.world.width() * 8f;
         float height = Vars.world.height() * 8f;
 

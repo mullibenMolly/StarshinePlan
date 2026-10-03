@@ -10,9 +10,7 @@ import mindustry.Vars;
 import mindustry.content.Fx;
 import mindustry.entities.Damage;
 import mindustry.gen.Player;
-import mindustry.gen.UnitEntity;
 import mindustry.type.UnitType;
-import mindustry.world.blocks.storage.CoreBlock;
 import xx.xx_Type.F_CompositeUnitType;
 
 import static mindustry.Vars.player;
@@ -48,6 +46,7 @@ public class F_CompositeUnitEntity extends CoreUnitEntity {//恕我本人能力�
             reviveDelay;
 
     public float
+            extraRotation,//头武器的角度，用于给特效传入角度数据
             recordedRevivesSum,//recorded amount of revives
             recordedHealth,//recorded health
             sssCounter,

@@ -1,13 +1,13 @@
 package xx.expand;
 
 import arc.Core;
-import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.Angles;
 import arc.math.Interp;
 import arc.math.Mathf;
 import arc.struct.IntSet;
+import arc.util.Log;
 import arc.util.Time;
 import arc.util.Tmp;
 import mindustry.Vars;
@@ -26,12 +26,13 @@ import mindustry.gen.Sounds;
 import mindustry.gen.Unit;
 import mindustry.graphics.Layer;
 import mindustry.graphics.Pal;
+import mindustry.type.Weapon;
 import xx.xx_Type.LinkRailBullet;
 import xx.xx_Type.RailBullet2Type;
 
 import static arc.graphics.g2d.Draw.color;
 
-public class F_AheadWeapon extends ChargeLockWeapon{
+public class F_AheadWeapon extends Weapon {
 
     public F_AheadWeapon(String name) {
         super(name);
@@ -40,6 +41,11 @@ public class F_AheadWeapon extends ChargeLockWeapon{
     public static class BulletData {
         public IntSet unitIds = new IntSet();
         public float extraDamage = 0;
+    }
+    @Override
+    public void update(Unit unit, WeaponMount mount) {
+        ((F_CompositeUnitEntity)unit).extraRotation = mount.rotation;
+        super.update(unit, mount);
     }
 
     @Override
@@ -99,7 +105,7 @@ public class F_AheadWeapon extends ChargeLockWeapon{
     @Override
     protected void shoot(Unit unit, WeaponMount mount, float shootX, float shootY, float rotation) {
 
-
+        Log.info("shoot里"+rotation);
 
         int mapLength = Math.max (Vars.world.height() , Vars.world.width()) * 32;
         super.shoot(unit, mount, shootX, shootY, rotation);
@@ -135,7 +141,7 @@ public class F_AheadWeapon extends ChargeLockWeapon{
             fragRandomSpread = 0;
             fragSpread = 90;
             fragAngle = 0;
-            fragBullet = new RailBullet2Type(){{
+            fragBullet = new RailBullet2Type(){{//线攻击
                 declinePierceCap = 1;
                 declinePierceDamage= 0.5f;
                 backRegion = Core.atlas.find("clear-back");
@@ -169,17 +175,17 @@ public class F_AheadWeapon extends ChargeLockWeapon{
                 }};
             }};
 
-            //对范围内每个单位发射一个RailBulletType
+            //需要对范围内每个单位发射一个RailBulletType
             intervalRandomSpread = 360f;
             intervalDelay = -1f;
-            intervalBullets = 3;
+            intervalBullets = 4;
             intervalBullet = new LinkRailBullet(){{//这个不重要
                 backRegion = Core.atlas.find("shell-back");
                 frontRegion = Core.atlas.find("shell");
 
                 damage = 0;
                 speed = 8;
-                lifetime =230;
+                lifetime =220;
                 width = 6;
                 height = 6;
                 trailColor = Pal.surge;
@@ -216,15 +222,15 @@ public class F_AheadWeapon extends ChargeLockWeapon{
                             Lines.circle(e.x, e.y, radius);
                             Draw.reset();
                         }),
-                        xx_Fx.createStarBomb(40f,2f,2f)
+                        xx_Fx.createStarBomb(40f,2f,3f)
                 );
 
 
 
-                linkBullet = new RailBulletType(){{
+                linkBullet = new RailBulletType(){{//完蛋了，我看不懂我的代码了
 
 
-                    length = 138f;
+                    length = 207f;//爆炸连接范围
                     damage = 10000f;
 
                     pierceArmor = true;

@@ -213,14 +213,14 @@ public class xx_UnitTypes {
 
 
             weapons.add(new F_AheadWeapon("ahead-weapon"){{//头武器
-                reload = 300f;
+                reload = 600f;
                 x = 0f;
                 y = 280f;
                 shootY = 0;
                 chargeSound = Sounds.chargeCorvus;
                 shootSound = Sounds.shootCorvus;
                 rotate = true;
-                rotateSpeed = 120f;
+                rotateSpeed = 1f;
                 top = true;
                 mirror = false;
                 shoot.firstShotDelay = 200f;
@@ -256,7 +256,10 @@ public class xx_UnitTypes {
                     laserAbsorb = false;
                     lifetime = 130f;
                     keepVelocity = false;
+                    parentizeEffects = true;
                     chargeEffect = new MultiEffect(xx_Fx.f_AheadCharge , xx_Fx.f_AheadCharge2);
+                    //chargeEffect = xx_Fx.f_AheadCharge2;
+                    //shootEffect = xx_Fx.f_AheadCharge;
                     shootEffect = Fx.none;
 
                     absorbable = false;
