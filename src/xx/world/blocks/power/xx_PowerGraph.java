@@ -18,7 +18,7 @@ import java.lang.reflect.Field;
 
 public class xx_PowerGraph extends PowerGraph {
     public int graphVoltage;
-    public float powerLoss;
+    public float powerLoss;//不想管，出问题了再改成局部变量
 
     private static Field entityField;//缓存
 
@@ -203,11 +203,17 @@ public class xx_PowerGraph extends PowerGraph {
         for(int i = 0; i < producers.size; i++){
 
             var producer = items[i];
+
             voltageGraph_out v = (voltageGraph_out)producer;
 
-            if(v.getOutputVoltage() >= graphVoltage) {
-                powerProduced += producer.getPowerProduction();
+            if(v.getMaxLoadPower() < lastPowerNeeded - lastPowerProduced){
+                v.electricityCollapse();//电力过载
+                Log.info(lastPowerNeeded);
             }
+            else if(v.getOutputVoltage() >= graphVoltage) {
+                powerProduced += producer.getPowerProduction();
+            }//电力崩溃后排除该发电机
+
         }
         return powerProduced;
     }
@@ -321,16 +327,15 @@ public class xx_PowerGraph extends PowerGraph {
         //Log.info("电网" + getID());
 
 
-        float powerNeeded = getPowerNeeded();
         float powerProduced = getPowerProduced();
+        float powerNeeded = getPowerNeeded();
 
-        //lineLossRate = getLineLossRate(powerProduced);
 
-        //虽然不知道源码为什么这么写，但这么写一定有它的意义...对吧
+        powerLoss = getPowerLoss();
         lastPowerNeeded = powerNeeded + powerLoss;
         lastPowerProduced = powerProduced;
         graphVoltage = getGraphVoltage();//计算电网电压
-        powerLoss = getPowerLoss();
+
 
 
         powerBalance.add(lastPowerProduced - lastPowerNeeded);//用于电力节点的bar
@@ -350,7 +355,6 @@ public class xx_PowerGraph extends PowerGraph {
             }
 
             distributePower(powerNeeded, powerProduced - powerLoss, charged);
-            examinePower();
         }
     }
 
