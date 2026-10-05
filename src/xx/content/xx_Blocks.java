@@ -1,18 +1,14 @@
 package xx.content;
 
 import arc.graphics.Color;
-import arc.math.Mathf;
 import mindustry.content.Fx;
 import mindustry.content.Items;
 import mindustry.content.Liquids;
 import mindustry.gen.Sounds;
-import mindustry.graphics.Pal;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
 import mindustry.type.LiquidStack;
 import mindustry.world.Block;
-import mindustry.world.blocks.power.ConsumeGenerator;
-import mindustry.world.blocks.power.PowerNode;
 import mindustry.world.draw.*;
 import xx.world.blocks.power.text_node;
 import xx.world.blocks.power.text_node2;
@@ -117,7 +113,7 @@ public class xx_Blocks {
         text_production = new xx_ConsumeGenerator("text_production"){{
             requirements(Category.power, with(Items.graphite, 100, Items.carbide, 60, Items.oxide, 60f, Items.silicon, 100));
             powerProduction = 10;
-            protentionVoltage = 10;//发电电压
+            voltageProduction = 10;//发电电压
 
 
             consumeLiquids(LiquidStack.with(Liquids.slag, 20f / 60f, Liquids.arkycite, 40f / 60f));

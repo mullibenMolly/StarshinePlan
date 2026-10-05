@@ -6,6 +6,7 @@ import arc.struct.IntSet;
 import arc.struct.Queue;
 import arc.struct.Seq;
 import arc.util.Log;
+import arc.util.Time;
 import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
@@ -19,6 +20,9 @@ import java.lang.reflect.Field;
 public class xx_PowerGraph extends PowerGraph {
     public int graphVoltage;
     public float powerLoss;//不想管，出问题了再改成局部变量
+    public float timer;//计时器
+    public final float damageDelay = 3f;//伤害间隔，单位：帧
+    public boolean getOff;//是否到达时间
 
     private static Field entityField;//缓存
 
@@ -207,7 +211,7 @@ public class xx_PowerGraph extends PowerGraph {
             voltageGraph_out v = (voltageGraph_out)producer;
 
             if(v.getMaxLoadPower() < lastPowerNeeded - lastPowerProduced){
-                v.electricityCollapse();//电力过载
+                v.electricityCollapse();//电力崩溃
                 Log.info(lastPowerNeeded);
             }
             else if(v.getOutputVoltage() >= graphVoltage) {
@@ -222,10 +226,33 @@ public class xx_PowerGraph extends PowerGraph {
     public float getPowerNeeded(){
         float powerNeeded = 0f;
         var items = consumers.items;
+
+        if(getOff){
+            for(int i = 0; i < consumers.size; i++){
+                var consumer = items[i];
+                voltageGraph_in v =  (voltageGraph_in) consumer;
+
+                if(graphVoltage > v.getMaxAcceptableVoltage()){
+                    v.voltageOverload();//电力过压，击穿保护，理应强制耗电
+                    consumer.damagePierce(graphVoltage);
+                }
+
+                if(consumer.shouldConsumePower && v.getRateVoltageConsumption() <= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
+                    powerNeeded += consumer.block.consPower.requestedPower(consumer);
+                }
+            }
+            return powerNeeded;
+        }//只想做一次判断，但又懒得提取代码
+
         for(int i = 0; i < consumers.size; i++){
             var consumer = items[i];
             voltageGraph_in v =  (voltageGraph_in) consumer;
-            if(consumer.shouldConsumePower && v.getRateVoltageConsumption() >= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
+
+            if(graphVoltage > v.getMaxAcceptableVoltage()){
+                v.voltageOverload();//电力过压，击穿保护，理应强制耗电
+            }
+
+            if(consumer.shouldConsumePower && v.getRateVoltageConsumption() <= graphVoltage){//TODO 这里电压判断也许应该放在shouldConsumePower里，注意上面还有
                 powerNeeded += consumer.block.consPower.requestedPower(consumer);
             }
         }
@@ -260,55 +287,65 @@ public class xx_PowerGraph extends PowerGraph {
     public void distributePower(float needed, float produced, boolean charged) {
         var items = consumers.items;
 
-        //float minNeeded = getPowerMinNeeded();
-        //优先分情况，这里应该可以不用if，但我在想我这样弄是否可以在特定情况下节省点性能
-        //这里应该可以优化的
+        if(getOff){
+            for (int i = 0; i < consumers.size; i++) {
+                var consumer = items[i];
+                voltageGraph_in v = (voltageGraph_in)consumer;//我实在不知道这该取什么名字。这作为附加属性
+                ConsumePower consPower = consumer.block.consPower;
+                if(graphVoltage >= v.getRateVoltageConsumption()) {//对比电网电压与机器额定电压
+                    if (consumer.shouldConsumePower) {
+                        float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
+                        consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1f);//计算电力满足度
+                        //超频提供的额外效率
+                        consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
+                        //分配电力过高时，过载
+                        if(obtained > v.getMaxAcceptablePower()){
+                            v.powerOverload();//电力过载
+                            consumer.damagePierce(Math.max(consumer.health * 0.1f , obtained));
+                        }
+                    } else {
+                        consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+                    }
+                }
+                else {
+                    consumer.power.status = 0;//电压不匹配，直接=0
+                }
+            }
+            return;
+        }
 
-        //if (needed <= produced && !Mathf.zero(produced)) {
+
+
             for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
                 voltageGraph_in v = (voltageGraph_in)consumer;//我实在不知道这该取什么名字。这作为附加属性
 
-
-
                 ConsumePower consPower = consumer.block.consPower;
 
-                if(graphVoltage >= v.getRateVoltageConsumption()) {
 
-                    if (consumer.shouldConsumePower) {//对比电网电压与机器额定电压
+                if(graphVoltage >= v.getRateVoltageConsumption()) {//对比电网电压与机器额定电压
+
+                    if (consumer.shouldConsumePower) {
                         float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
                         consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1);//计算电力满足度
+                        //超频提供的额外效率
+                        consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
+
+                        //分配电力过高时，过载
+                        if(obtained > v.getMaxAcceptablePower()){
+                            v.powerOverload();//电力过载
+                        }
+
                     } else {
                         consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
                     }
 
                 }
-                else consumer.power.status = 0;//电压不匹配，直接=0
+                else {
+                    consumer.power.status = 0;//电压不匹配，直接=0
+                }
             }
-        //}
-//        else if(needed <= produced && !Mathf.zero(produced)){
-//            for (int i = 0; i < consumers.size; i++) {
-//                var consumer = items[i];
-//
-//                xx_ConsumePower consPower = (xx_ConsumePower) consumer.block.consPower;//该电网只会存在这种电力消耗模块
-//
-//                if (consumer.shouldConsumePower && graphVoltage >= consPower.ratedVoltage) {
-//                    consumer.power.status = 1;
-//                }
-//                else {
-//                    consumer.power.status =  produced >= (needed + consPower.usage)? 1 : 0 ;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
-//                }
-//
-//            }
-//        }
-//        else
-//        {
-//            for (int i = 0; i < consumers.size; i++) {
-//                var consumer = items[i];
-//                consumer.power.status = 0;
-//            }
-//        }
 
     }
 
@@ -325,7 +362,9 @@ public class xx_PowerGraph extends PowerGraph {
         }
 
         //Log.info("电网" + getID());
-
+        timer = getOff?0:timer;
+        timer += Time.delta;
+        getOff = timer > damageDelay;
 
         float powerProduced = getPowerProduced();
         float powerNeeded = getPowerNeeded();

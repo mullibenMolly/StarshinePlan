@@ -3,7 +3,6 @@ package xx.world.blocks.power;
 import arc.Core;
 import arc.graphics.g2d.Draw;
 import arc.util.Interval;
-import arc.util.Log;
 import arc.util.Strings;
 import arc.util.Time;
 import mindustry.Vars;
@@ -23,7 +22,6 @@ import mindustry.world.meta.StatUnit;
 import mindustry.world.meta.StatValues;
 import mindustry.world.modules.ItemModule;
 import mindustry.world.modules.LiquidModule;
-import xx.world.blocks.production.voltageGraph_in;
 import xx.world.blocks.production.voltageGraph_out;
 import xx.world.meta.xx_Stat;
 import xx.world.meta.xx_StatUnit;
@@ -34,7 +32,7 @@ import static mindustry.Vars.player;
 import static mindustry.Vars.tilesize;
 
 public class xx_ConsumeGenerator extends ConsumeGenerator {
-    public int protentionVoltage;//TODO 记得将powerProduction与这个并到一起去
+    public int voltageProduction;//生产电压
 
     public float electricityCollapseDelay = 30;//崩溃时间
 
@@ -98,7 +96,7 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
         if(hasItems && itemCapacity > 0) stats.add(Stat.itemCapacity, itemCapacity, StatUnit.items);
 
         stats.add(generationType, powerProduction, xx_StatUnit.powerSecond2);//功率显示
-        stats.add(xx_Stat.baseProtentionVoltage,protentionVoltage,xx_StatUnit.voltage);//电压显示
+        stats.add(xx_Stat.baseProtentionVoltage, voltageProduction,xx_StatUnit.voltage);//电压显示
 
         if(hasItems){
             stats.add(Stat.productionTime, itemDuration / 60f, StatUnit.seconds);
@@ -223,7 +221,7 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
 
         @Override
         public int getOutputVoltage() {
-            return (int) (protentionVoltage * productionEfficiency);
+            return (int) (voltageProduction * productionEfficiency);
         }
 
         @Override

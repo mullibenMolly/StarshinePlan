@@ -6,5 +6,5 @@ public interface voltageGraph_out extends voltageGraph{
 
     int getOutputVoltage();//电压输出
 
-    void electricityCollapse();//电力崩溃，当电网需求功率过高时引发崩溃
+    void electricityCollapse();//电力崩溃，当电网需求功率过高时引发崩溃。这可是连锁崩溃的开始
 }

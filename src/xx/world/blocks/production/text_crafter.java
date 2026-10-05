@@ -2,6 +2,7 @@ package xx.world.blocks.production;
 
 import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
+import arc.util.Log;
 import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
@@ -124,6 +125,11 @@ public class text_crafter extends GenericCrafter{
         public float totalProgress;
         public float warmup;
 
+        public boolean
+                voltageOverload = false,
+                powerOverload = false;
+
+
         @Override
         public void draw() {
             drawer.draw(this);
@@ -166,6 +172,24 @@ public class text_crafter extends GenericCrafter{
             }
 
             return enabled;
+        }
+
+        @Override
+        public void updateConsumption(){
+            if(voltageOverload || powerOverload){
+                this.potentialEfficiency = this.efficiency = this.optionalEfficiency = 0.0F;
+                if(voltageOverload){
+                    shouldConsumePower = true;
+                    Log.info("Voltage Overload enabled");
+                }
+                if(powerOverload){
+                    Log.info("PowerOverload enabled");
+                }
+
+                voltageOverload = powerOverload = false;//重制
+                return;
+            }
+            super.updateConsumption();
         }
 
         @Override
@@ -334,8 +358,13 @@ public class text_crafter extends GenericCrafter{
         }
 
         @Override
+        public void voltageOverload() {
+            voltageOverload = true;
+        }
+
+        @Override
         public void powerOverload() {
-            //TODO none！
+            powerOverload = true;
         }
 
         @Override
