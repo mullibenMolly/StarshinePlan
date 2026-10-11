@@ -1,5 +1,6 @@
 package xx.world.blocks.production;
 
+import arc.Core;
 import arc.graphics.g2d.Draw;
 import arc.math.Mathf;
 import arc.util.Log;
@@ -13,6 +14,7 @@ import mindustry.graphics.Pal;
 import mindustry.logic.LAccess;
 import mindustry.type.Item;
 import mindustry.type.ItemStack;
+import mindustry.ui.Bar;
 import mindustry.world.Tile;
 import mindustry.world.blocks.power.BeamNode;
 import mindustry.world.blocks.power.PowerNode;
@@ -55,6 +57,15 @@ public class text_crafter extends GenericCrafter{
     @Override
     public void setBars(){
         super.setBars();
+
+
+        if(consPower != null){
+            addBar("current", entity -> new Bar(
+                    () -> Core.bundle.format("bar.items", entity.items.total()),
+                    () -> Pal.power,
+                    () -> (float)entity.items.total() / itemCapacity)
+            );
+        }//电流容量显示
     }
 
     @Override
@@ -342,9 +353,14 @@ public class text_crafter extends GenericCrafter{
             return consPower.usage;
         }
 
+//        @Override
+//        public float getMaxAcceptablePower() {
+//            return maxUsage;
+//        }
+
         @Override
-        public float getMaxAcceptablePower() {
-            return maxUsage;
+        public float getMaxAcceptableCurrent() {
+            return 10;
         }
 
         @Override
@@ -376,11 +392,5 @@ public class text_crafter extends GenericCrafter{
         public float getMaxOverclockEfficiency() {
             return 0;//TODO 当前用于占位
         }
-
-        @Override
-        public void setPowerStatus(Building building, float status) {
-            building.power.status = status;
-        }
-
     }
 }

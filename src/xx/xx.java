@@ -34,32 +34,7 @@ public class xx extends Mod{
         Vars.renderer.maxZoom = 60f;    // 默认 15，越大能放越大
 
 
-
-    }
-
-    //指令，左右脑互博的产物，想要用就得开联机，但又只会在单机下使用
-    @Override
-    public void registerClientCommands(CommandHandler handler) {
-        handler.register("mycmd", "指令集1.0", args -> {
-            Log.info("执行了 mycmd");
-        });
-
-        handler.register("find", "寻找鼠标位置的建筑", args -> {
-            float mouseX = Core.input.mouseWorldX();
-            float mouseY = Core.input.mouseWorldY();
-            Building build = Vars.world.buildWorld(mouseX, mouseY);
-            if(build == null){
-                Vars.ui.chatfrag.addMessage("[red]没有发现建筑！");
-                return;
-            }
-            Class<? extends Building> buildClass = build.getClass();
-            Field[] fields = buildClass.getDeclaredFields();
-            for(Field f : fields){
-                Vars.ui.chatfrag.addMessage(f.getName());
-            }
-
-        });
-
+        Log.info("星星计划StarshinePlan" + Vars.mods.getMod(xx.class).meta.version);
     }
 
 

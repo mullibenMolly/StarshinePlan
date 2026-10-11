@@ -293,19 +293,25 @@ public class xx_PowerGraph extends PowerGraph {
                 voltageGraph_in v = (voltageGraph_in)consumer;//我实在不知道这该取什么名字。这作为附加属性
                 ConsumePower consPower = consumer.block.consPower;
                 if(graphVoltage >= v.getRateVoltageConsumption()) {//对比电网电压与机器额定电压
+
                     if (consumer.shouldConsumePower) {
+
                         float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
+
                         consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1f);//计算电力满足度
                         //超频提供的额外效率
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
                         //分配电力过高时，过载
-                        if(obtained > v.getMaxAcceptablePower()){
+
+                        if(obtained > v.getMaxAcceptableCurrent()* graphVoltage){//判断电流是否过载
                             v.powerOverload();//电力过载
                             consumer.damagePierce(Math.max(consumer.health * 0.1f , obtained));
                         }
+
                     } else {
                         consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
                     }
+
                 }
                 else {
                     consumer.power.status = 0;//电压不匹配，直接=0
@@ -333,7 +339,7 @@ public class xx_PowerGraph extends PowerGraph {
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
 
                         //分配电力过高时，过载
-                        if(obtained > v.getMaxAcceptablePower()){
+                        if(obtained > v.getMaxAcceptableCurrent()* graphVoltage){
                             v.powerOverload();//电力过载
                         }
 
