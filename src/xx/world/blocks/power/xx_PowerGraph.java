@@ -21,7 +21,7 @@ public class xx_PowerGraph extends PowerGraph {
     public int graphVoltage;
     public float powerLoss;//不想管，出问题了再改成局部变量
     public float timer;//计时器
-    public final float damageDelay = 3f;//伤害间隔，单位：帧
+    public static final float damageDelay = 3f;//伤害间隔，单位：帧
     public boolean getOff;//是否到达时间
 
     private static Field entityField;//缓存
@@ -232,7 +232,7 @@ public class xx_PowerGraph extends PowerGraph {
                 var consumer = items[i];
                 voltageGraph_in v =  (voltageGraph_in) consumer;
 
-                if(graphVoltage > v.getMaxAcceptableVoltage()){
+                if(v.isVoltageOverload(graphVoltage)){
                     v.voltageOverload();//电力过压，击穿保护，理应强制耗电
                     consumer.damagePierce(graphVoltage);
                 }
@@ -244,11 +244,12 @@ public class xx_PowerGraph extends PowerGraph {
             return powerNeeded;
         }//只想做一次判断，但又懒得提取代码
 
+
         for(int i = 0; i < consumers.size; i++){
             var consumer = items[i];
             voltageGraph_in v =  (voltageGraph_in) consumer;
 
-            if(graphVoltage > v.getMaxAcceptableVoltage()){
+            if(v.isVoltageOverload(graphVoltage)){
                 v.voltageOverload();//电力过压，击穿保护，理应强制耗电
             }
 
@@ -303,7 +304,7 @@ public class xx_PowerGraph extends PowerGraph {
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
                         //分配电力过高时，过载
 
-                        if(obtained > v.getMaxAcceptableCurrent()* graphVoltage){//判断电流是否过载
+                        if(v.isPowerOverload(obtained)){//判断电流是否过载
                             v.powerOverload();//电力过载
                             consumer.damagePierce(Math.max(consumer.health * 0.1f , obtained));
                         }
@@ -321,8 +322,7 @@ public class xx_PowerGraph extends PowerGraph {
         }
 
 
-
-            for (int i = 0; i < consumers.size; i++) {
+        for (int i = 0; i < consumers.size; i++) {
                 var consumer = items[i];
 
                 voltageGraph_in v = (voltageGraph_in)consumer;//我实在不知道这该取什么名字。这作为附加属性
@@ -339,7 +339,7 @@ public class xx_PowerGraph extends PowerGraph {
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
 
                         //分配电力过高时，过载
-                        if(obtained > v.getMaxAcceptableCurrent()* graphVoltage){
+                        if(v.isPowerOverload(obtained)){
                             v.powerOverload();//电力过载
                         }
 

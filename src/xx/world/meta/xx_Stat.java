@@ -8,6 +8,7 @@ public class xx_Stat extends Stat {
         super(name);
     }
 
+    //动态，进度条。先定义，先加载，越在上显示。
     public static final Stat
             pbrang = new Stat("pbrang", StatCat.power),
             baseProtentionVoltage = new Stat("baseProtentionVoltage", StatCat.power),

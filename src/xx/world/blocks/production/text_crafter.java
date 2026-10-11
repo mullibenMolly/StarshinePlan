@@ -35,12 +35,14 @@ public class text_crafter extends GenericCrafter{
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
     //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
     public float maxUsage;//最大功率，代替最大电流的功能
+    public float maxCurrent;
 
     public text_crafter(String name) {
         super(name);
         connectedPower = false;
         this.maxVoltage = 0;
         this.maxUsage = 0;
+        this.maxCurrent = 0;
     }
 
     @Override
@@ -60,10 +62,11 @@ public class text_crafter extends GenericCrafter{
 
 
         if(consPower != null){
-            addBar("current", entity -> new Bar(
-                    () -> Core.bundle.format("bar.items", entity.items.total()),
+            addBar("current", (TextBuild entity) -> new Bar(
+                    () -> Core.bundle.format("bar.current", entity.power, entity.voltage* maxCurrent),
                     () -> Pal.power,
-                    () -> (float)entity.items.total() / itemCapacity)
+                    () -> entity.power / entity.voltage* maxCurrent
+                    )
             );
         }//电流容量显示
     }
@@ -140,6 +143,8 @@ public class text_crafter extends GenericCrafter{
                 voltageOverload = false,
                 powerOverload = false;
 
+        private int voltage;//当前电压，由电网设置
+        private float power;//同上
 
         @Override
         public void draw() {
@@ -197,7 +202,7 @@ public class text_crafter extends GenericCrafter{
                     Log.info("PowerOverload enabled");
                 }
 
-                voltageOverload = powerOverload = false;//重制
+                voltageOverload = powerOverload = false;//重置，这个会在电网每帧设置，每帧更新
                 return;
             }
             super.updateConsumption();
@@ -358,9 +363,21 @@ public class text_crafter extends GenericCrafter{
 //            return maxUsage;
 //        }
 
+//        @Override
+//        public float getMaxAcceptableCurrent() {
+//            return maxCurrent;
+//        }
+
         @Override
-        public float getMaxAcceptableCurrent() {
-            return 10;
+        public boolean isPowerOverload(float power) {
+            this.power = power;
+            return power > maxCurrent* voltage;
+        }
+
+        @Override
+        public boolean isVoltageOverload(int voltage) {
+            this.voltage = voltage;
+            return voltage > maxVoltage;
         }
 
         @Override
@@ -368,10 +385,10 @@ public class text_crafter extends GenericCrafter{
             return ((xx_ConsumePower) consPower).ratedVoltage;
         }
 
-        @Override
-        public int getMaxAcceptableVoltage() {
-            return maxVoltage;
-        }
+//        @Override
+//        public int getMaxAcceptableVoltage() {
+//            return maxVoltage;
+//        }
 
         @Override
         public void voltageOverload() {

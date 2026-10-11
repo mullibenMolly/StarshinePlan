@@ -92,6 +92,7 @@ public class xx_Blocks {
 
             maxVoltage = 20;
             maxUsage = 100;
+            maxCurrent = 10;
 
             consumeItems(with(Items.coal, 1, Items.sand, 2));
             consumePower(10f,5f , 10);

@@ -8,7 +8,9 @@ public class xx_StatUnit extends StatUnit{
         super(name);
     }
 
+    //核心数据库，信息显示
     public static final StatUnit
             powerSecond2 = new StatUnit("powerSecond2", "[accent]" + Iconc.power + "[]"),
             voltage = new StatUnit("voltage","[red]" + Iconc.power + "[]");
+
 }
