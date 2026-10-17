@@ -44,25 +44,13 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
     @Override//状态栏
     public void setBars(){
         super.setBars();
-
-//        if(outputLiquid != null){
-//            removeBar("liquid-" + outputLiquid.liquid.name);
-//        }
-
         if(hasPower && outputsPower){
-//            removeBar("power");
             addBar("power", (xx_ConsumeGeneratorBuild entity) -> new Bar(
-                    () -> Core.bundle.format("bar.poweroutput2",
-                            Strings.fixed(entity.getPowerProduction(), 1)),
+                    () -> entity.electricityCollapse? Core.bundle.get("bar.electricitycollapse") : Core.bundle.format("bar.poweroutput2", Strings.fixed(entity.getPowerProduction(), 1)),
                     () -> Pal.powerBar,
                     () -> entity.electricityCollapse ? entity.timer_electricityCollapse / (electricityCollapseDelay * 60) : entity.productionEfficiency
             ));//崩溃回复时间显示，与这个混在一起，我不想再来个进度条
         }
-
-//        if(outputLiquid != null){
-//            addLiquidBar(outputLiquid.liquid);
-//        }
-
     }
 
     @Override//信息统计面板
@@ -95,7 +83,7 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
         if(hasLiquids) stats.add(Stat.liquidCapacity, liquidCapacity, StatUnit.liquidUnits);
         if(hasItems && itemCapacity > 0) stats.add(Stat.itemCapacity, itemCapacity, StatUnit.items);
 
-        stats.add(generationType, powerProduction, xx_StatUnit.powerSecond2);//功率显示
+        stats.add(generationType, powerProduction, xx_StatUnit.current);//功率显示
         stats.add(xx_Stat.baseProtentionVoltage, voltageProduction,xx_StatUnit.voltage);//电压显示
 
         if(hasItems){

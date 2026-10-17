@@ -8,7 +8,7 @@ import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.core.Renderer;
-import mindustry.core.UI;
+import mindustry.gen.Iconc;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Pal;
 import mindustry.logic.LAccess;
@@ -34,15 +34,12 @@ import static mindustry.Vars.tilesize;
 public class text_crafter extends GenericCrafter{
 
     public int maxVoltage;//机器能够承受的最大电压，电网电压不匹配忽略
-    //public float maxCurrent;//机器能够承受的最大电流，应在电网类检测并操作
-    public float maxUsage;//最大功率，代替最大电流的功能
-    public float maxCurrent;
+    public float maxCurrent;//最大电流
 
     public text_crafter(String name) {
         super(name);
         connectedPower = false;
         this.maxVoltage = 0;
-        this.maxUsage = 0;
         this.maxCurrent = 0;
     }
 
@@ -52,8 +49,8 @@ public class text_crafter extends GenericCrafter{
         //TODO 后面需要适配不耗电的工厂
         //目前没有最大输入功率一说，没有过载。
         if(hasPower) {
-            stats.add(xx_Stat.maxPowerUse, maxUsage, xx_StatUnit.powerSecond2);//最大输入功率
-            stats.add(xx_Stat.maxVoltage, maxVoltage, xx_StatUnit.voltage);//最大承受电压
+            stats.add(xx_Stat.maxCurrent, maxCurrent, xx_StatUnit.current);//最大输入功率
+            stats.add(xx_Stat.maxVoltage,"[red]" + Iconc.power + "[] "+Core.bundle.format("stats.voltage", ((xx_ConsumePower)consPower).ratedVoltage, maxVoltage));//最大承受电压
         }
     }
 
@@ -64,9 +61,8 @@ public class text_crafter extends GenericCrafter{
         if(consPower != null){
 //            boolean buffered = consPower.buffered;
 //            float capacity = consPower.capacity;
-
-            addBar("power", entity -> new Bar(
-                    () -> /*Core.bundle.get("bar.power")*/ "[salmon]name",
+            addBar("power", ( TextBuild entity) -> new Bar(
+                    () -> Core.bundle.format("bar.voltagepower", entity.currentPower, entity.getRatePowerConsumption(), (entity.getMaxAcceptableCurrent()* ((xx_PowerGraph)entity.power.graph).graphVoltage) ) ,
                     () -> Pal.powerBar,
                     () -> entity.power.status
                     )
@@ -358,11 +354,6 @@ public class text_crafter extends GenericCrafter{
             if (legacyReadWarmup) read.f();
         }
 
-
-        @Override//用于调试
-        public String getPowerAll() {
-            return super.getPowerAll();
-        }
 
         @Override
         public float getRatePowerConsumption() {

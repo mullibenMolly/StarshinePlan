@@ -71,7 +71,6 @@ public class xx_Blocks {
             ambientSoundVolume = 0.07f;
 
             maxVoltage = 20;
-            maxUsage = 100;
 
             consumeItems(with(Items.coal, 1, Items.sand, 2));
             consumePower(5f, 10);
@@ -91,7 +90,6 @@ public class xx_Blocks {
             ambientSoundVolume = 0.07f;
 
             maxVoltage = 20;
-            maxUsage = 100;
             maxCurrent = 10;
 
             consumeItems(with(Items.coal, 1, Items.sand, 2));

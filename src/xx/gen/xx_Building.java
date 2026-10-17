@@ -149,17 +149,4 @@ public class xx_Building extends Building {
 
         }
     }
-
-    //用于调试
-    public String getPowerAll(){
-        xx_PowerModule power = (xx_PowerModule)this.power;
-        xx_ConsumePower consPower = (xx_ConsumePower) this.block.consPower;
-        return "xx_PowerModule{"+
-                "\n当前电压voltage = "+power.voltage+" / "+
-                "\n当前电流current = "+power.current+" / "+
-                "\n是并联parallelConnection = "+power.parallelConnection+
-                "\nstatus = "+ power.status +
-                "\n}";
-
-    }
 }

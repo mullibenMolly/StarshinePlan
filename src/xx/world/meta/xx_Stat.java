@@ -8,13 +8,13 @@ public class xx_Stat extends Stat {
         super(name);
     }
 
-    //动态，进度条。先定义，先加载，越在上显示。
     public static final Stat
             pbrang = new Stat("pbrang", StatCat.power),
             baseProtentionVoltage = new Stat("baseProtentionVoltage", StatCat.power),
-            maxPowerUse = new Stat("maxPowerUse", StatCat.power),
+            maxCurrent = new Stat("maxCurrent", StatCat.power),
             //minPowerUse = new Stat("minPowerUse", StatCat.power),
             ratedVoltage = new Stat("ratedVoltage", StatCat.power),
-            maxVoltage = new Stat("maxVoltage", StatCat.power);
+            maxVoltage = new Stat("maxVoltage", StatCat.power),
+            ratePower = new Stat("ratePower", StatCat.power);
 
 }

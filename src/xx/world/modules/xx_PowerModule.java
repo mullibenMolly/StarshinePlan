@@ -12,7 +12,7 @@ public class xx_PowerModule extends PowerModule {
 //    public float powerReserve = 0;//内部缓存，不满就吞电，非常地自私
 //    public boolean hasReserve;//是否有内部缓存，没有的一般为电力节电
 
-    public int voltage;//当前电压等级,这个应该跟随电网
+    //public int voltage;//当前电压等级,这个应该跟随电网
 
     public float current;//当前电流
 
@@ -37,16 +37,10 @@ public class xx_PowerModule extends PowerModule {
 
 
     //获取当前功率
-    public float getNowPower(){
-        return this.voltage * this.current;
-    }
-
-
-
-    //直接加上电网分配给它的电量
-//    public void calculateReserve(float PowerConsumption_R){
-//        powerReserve = Math.min(powerReserve + PowerConsumption_R,maxPowerReserve);
+//    public float getNowPower(){
+//        return this.voltage * this.current;
 //    }
+
 
     @Override
     public void write(Writes write){

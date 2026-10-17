@@ -3,7 +3,6 @@ package xx.world.consumes;
 import mindustry.gen.Building;
 import mindustry.world.consumers.ConsumePower;
 import mindustry.world.meta.Stat;
-import mindustry.world.meta.StatUnit;
 import mindustry.world.meta.Stats;
 import xx.world.meta.xx_Stat;
 import xx.world.meta.xx_StatUnit;
@@ -56,9 +55,8 @@ public class xx_ConsumePower extends ConsumePower {
         @Override
         public void display(Stats stats){
                 if(usage > 0f){
-                        stats.add(Stat.powerUse, usage, xx_StatUnit.powerSecond2);//额定功率
-                        //stats.add(xx_Stat.minPowerUse, minUsage, xx_StatUnit.powerSecond2);//最小功率
-                        stats.add(xx_Stat.ratedVoltage, ratedVoltage, xx_StatUnit.voltage);//额定电压
+                        stats.add(xx_Stat.ratePower, usage, xx_StatUnit.power);//额定功率
+                        //stats.add(xx_Stat.ratedVoltage, ratedVoltage, xx_StatUnit.voltage);//额定电压
                 }
         }
 
