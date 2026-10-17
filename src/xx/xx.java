@@ -34,8 +34,7 @@ public class xx extends Mod{
         Vars.renderer.maxZoom = 60f;    // 默认 15，越大能放越大
 
 
-        Log.info("星星计划StarshinePlan " + Vars.mods.getMod(xx.class).meta.version);
-        Log.info("内部名：" + Vars.mods.getMod(xx.class).meta.name);
+        Log.info("星星计划StarshinePlan " + Vars.mods.getMod(xx.class).meta.version + " 内部名：" + Vars.mods.getMod(xx.class).meta.name);
     }
 
 
@@ -74,7 +73,6 @@ public class xx extends Mod{
 
     @Override
     public void loadContent(){
-        Log.info("Loading some xx content.");
         xx_UnitTypes.load();
         EntityRegister.load();
         xx_Blocks.load();

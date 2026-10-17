@@ -11,7 +11,6 @@ import mindustry.gen.Building;
 import mindustry.gen.PowerGraphUpdater;
 import mindustry.world.blocks.power.PowerGraph;
 import mindustry.world.consumers.ConsumePower;
-import xx.world.blocks.production.voltageGraph;
 import xx.world.blocks.production.voltageGraph_in;
 import xx.world.blocks.production.voltageGraph_out;
 
@@ -232,7 +231,7 @@ public class xx_PowerGraph extends PowerGraph {
                 var consumer = items[i];
                 voltageGraph_in v =  (voltageGraph_in) consumer;
 
-                if(v.isVoltageOverload(graphVoltage)){
+                if(v.getMaxAcceptableVoltage() < graphVoltage){
                     v.voltageOverload();//电力过压，击穿保护，理应强制耗电
                     consumer.damagePierce(graphVoltage);
                 }
@@ -249,7 +248,7 @@ public class xx_PowerGraph extends PowerGraph {
             var consumer = items[i];
             voltageGraph_in v =  (voltageGraph_in) consumer;
 
-            if(v.isVoltageOverload(graphVoltage)){
+            if(v.getMaxAcceptableVoltage() < graphVoltage){
                 v.voltageOverload();//电力过压，击穿保护，理应强制耗电
             }
 
@@ -298,19 +297,21 @@ public class xx_PowerGraph extends PowerGraph {
                     if (consumer.shouldConsumePower) {
 
                         float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
+                        v.setCurrentPower(obtained);
 
                         consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1f);//计算电力满足度
                         //超频提供的额外效率
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
                         //分配电力过高时，过载
 
-                        if(v.isPowerOverload(obtained)){//判断电流是否过载
+                        if(v.getMaxAcceptableCurrent() * graphVoltage < obtained){//判断电流是否过载
                             v.powerOverload();//电力过载
                             consumer.damagePierce(Math.max(consumer.health * 0.1f , obtained));
                         }
 
                     } else {
-                        consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+                        float obtained = consPower.usage / (needed + consPower.usage) * produced;
+                        consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1f);//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
                     }
 
                 }
@@ -334,17 +335,19 @@ public class xx_PowerGraph extends PowerGraph {
 
                     if (consumer.shouldConsumePower) {
                         float obtained = consPower.usage / needed * produced;//得到的电功率，分配得来的功率
+                        v.setCurrentPower(obtained);
                         consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1);//计算电力满足度
                         //超频提供的额外效率
                         consumer.power.status += v.getMaxOverclockEfficiency() * (Math.min(obtained , v.getOverclockPowerConsumption()) / v.getRatePowerConsumption() - 1);
 
                         //分配电力过高时，过载
-                        if(v.isPowerOverload(obtained)){
+                        if(v.getMaxAcceptableCurrent() * graphVoltage < obtained){
                             v.powerOverload();//电力过载
                         }
 
                     } else {
-                        consumer.power.status = consPower.usage / (needed + consPower.usage) * produced;//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
+                        float obtained =  consPower.usage / (needed + consPower.usage) * produced;
+                        consumer.power.status = Math.min(obtained / v.getRatePowerConsumption(), 1);//机器未工作时，shouldConsumePower=false，这里是计算工作后，usage等于多少
                     }
 
                 }

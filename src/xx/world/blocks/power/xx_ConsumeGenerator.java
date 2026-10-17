@@ -45,12 +45,12 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
     public void setBars(){
         super.setBars();
 
-        if(outputLiquid != null){
-            removeBar("liquid-" + outputLiquid.liquid.name);
-        }
+//        if(outputLiquid != null){
+//            removeBar("liquid-" + outputLiquid.liquid.name);
+//        }
 
         if(hasPower && outputsPower){
-            removeBar("power");
+//            removeBar("power");
             addBar("power", (xx_ConsumeGeneratorBuild entity) -> new Bar(
                     () -> Core.bundle.format("bar.poweroutput2",
                             Strings.fixed(entity.getPowerProduction(), 1)),
@@ -59,9 +59,9 @@ public class xx_ConsumeGenerator extends ConsumeGenerator {
             ));//崩溃回复时间显示，与这个混在一起，我不想再来个进度条
         }
 
-        if(outputLiquid != null){
-            addLiquidBar(outputLiquid.liquid);
-        }
+//        if(outputLiquid != null){
+//            addLiquidBar(outputLiquid.liquid);
+//        }
 
     }
 

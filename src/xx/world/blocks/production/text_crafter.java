@@ -8,7 +8,7 @@ import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.core.Renderer;
-import mindustry.gen.Building;
+import mindustry.core.UI;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Pal;
 import mindustry.logic.LAccess;
@@ -22,6 +22,7 @@ import mindustry.world.blocks.production.GenericCrafter;
 import mindustry.world.consumers.Consume;
 import mindustry.world.consumers.ConsumePower;
 import xx.gen.xx_Building;
+import xx.world.blocks.power.xx_PowerGraph;
 import xx.world.consumes.xx_ConsumePower;
 import xx.world.meta.xx_Stat;
 import xx.world.meta.xx_StatUnit;
@@ -60,15 +61,26 @@ public class text_crafter extends GenericCrafter{
     public void setBars(){
         super.setBars();
 
-
         if(consPower != null){
-            addBar("current", (TextBuild entity) -> new Bar(
-                    () -> Core.bundle.format("bar.current", entity.power, entity.voltage* maxCurrent),
-                    () -> Pal.power,
-                    () -> entity.power / entity.voltage* maxCurrent
+//            boolean buffered = consPower.buffered;
+//            float capacity = consPower.capacity;
+
+            addBar("power", entity -> new Bar(
+                    () -> /*Core.bundle.get("bar.power")*/ "[salmon]name",
+                    () -> Pal.powerBar,
+                    () -> entity.power.status
                     )
             );
-        }//电流容量显示
+        }
+
+//        if(consPower != null){
+//            addBar("current", (TextBuild entity) -> new Bar(
+//                    () -> Core.bundle.format("bar.current", entity.currentPower, ((xx_PowerGraph)entity.power.graph).graphVoltage* maxCurrent),
+//                    () -> Pal.power,
+//                    () -> entity.currentPower / ((xx_PowerGraph)entity.power.graph).graphVoltage* maxCurrent
+//                    )
+//            );
+//        }//电流容量显示
     }
 
     @Override
@@ -143,8 +155,7 @@ public class text_crafter extends GenericCrafter{
                 voltageOverload = false,
                 powerOverload = false;
 
-        private int voltage;//当前电压，由电网设置
-        private float power;//同上
+        private float currentPower;//也许可以和电力满足度放一起，但还是算了
 
         @Override
         public void draw() {
@@ -363,32 +374,37 @@ public class text_crafter extends GenericCrafter{
 //            return maxUsage;
 //        }
 
+        @Override
+        public float getMaxAcceptableCurrent() {
+            return maxCurrent;
+        }
+
+        @Override
+        public void setCurrentPower(float currentPower) {
+            this.currentPower = currentPower;
+        }
+
 //        @Override
-//        public float getMaxAcceptableCurrent() {
-//            return maxCurrent;
+//        public boolean isPowerOverload(float power) {
+//            this.power = power;
+//            return power > maxCurrent* voltage;
 //        }
-
-        @Override
-        public boolean isPowerOverload(float power) {
-            this.power = power;
-            return power > maxCurrent* voltage;
-        }
-
-        @Override
-        public boolean isVoltageOverload(int voltage) {
-            this.voltage = voltage;
-            return voltage > maxVoltage;
-        }
+//
+//        @Override
+//        public boolean isVoltageOverload(int voltage) {
+//            this.voltage = voltage;
+//            return voltage > maxVoltage;
+//        }
 
         @Override
         public int getRateVoltageConsumption() {
             return ((xx_ConsumePower) consPower).ratedVoltage;
         }
 
-//        @Override
-//        public int getMaxAcceptableVoltage() {
-//            return maxVoltage;
-//        }
+        @Override
+        public int getMaxAcceptableVoltage() {
+            return maxVoltage;
+        }
 
         @Override
         public void voltageOverload() {

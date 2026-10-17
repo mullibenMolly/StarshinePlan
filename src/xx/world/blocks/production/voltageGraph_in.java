@@ -8,18 +8,20 @@ public interface voltageGraph_in extends voltageGraph {
 
 //    float getMaxAcceptablePower();
 
-//    float getMaxAcceptableCurrent();//最大电流
+    float getMaxAcceptableCurrent();//最大电流
 
-    boolean isPowerOverload(float power);//判断是否电流过载，并传输数值，这个要每帧调用
+    void setCurrentPower(float currentPower);
 
-    boolean isVoltageOverload(int voltage);//判断是否电压过载
+    //boolean isPowerOverload(float power);//判断是否电流过载，并传输数值，这个要每帧调用
+
+    //boolean isVoltageOverload(int voltage);//判断是否电压过载
 
     //过载机制还是很谜，调用过载方法是间隔的，但判断是每帧的。算了，能跑就行了。
     //在电网中，先检测电压，再检测电流
 
     int getRateVoltageConsumption();//额定电压消耗
 
-//    int getMaxAcceptableVoltage();//最大可承受电压
+    int getMaxAcceptableVoltage();//最大可承受电压
 
     void voltageOverload();//电压过压，强制工作，导致空转
 
